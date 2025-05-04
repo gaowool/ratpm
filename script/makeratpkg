@@ -1,0 +1,17 @@
+#!/bin/bash
+
+if [ "$(id -u)" -eq 0 ]; then
+    echo "注意当前是 root 用户"
+else
+    echo "请使用 root 权限运行此脚本" >&2
+    exit 1
+fi
+
+
+pkgname="${1:?需要包名}"
+pkgver="${2:?需要版本}"
+
+echo $pkgname > .RATINFO
+echo $pkgver >> .RATINFO
+find . -type f -printf "%P\n" >> .RATINFO
+find . ! -name "$pkgname-$pkgver.ratpkg" | cpio -o -H newc > $pkgname-$pkgver.ratpkg

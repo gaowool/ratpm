@@ -1,0 +1,74 @@
+#!/bin/bash
+
+get_abs_path() {
+    local target="$1"
+    [ -e "$target" ] || return 1
+
+    if [ -L "$target" ]; then
+        local link=$(ls -l "$target" | awk '{print $11}')
+        readlink_f "$(dirname "$target")/$link"
+    else
+        (cd "$(dirname "$target")" && echo "$PWD/$(basename "$target")")
+    fi
+}
+
+
+installpkg() {
+	ROOT="$1"
+	PKG_PATH=$2
+	pkgname=$3
+	echo "开始安装$pkgname"
+	cd $ROOT
+	cpio -idm < $PKG_PATH &> /dev/null
+	[ -d "$ROOT/var/ratpkg" ] || mkdir -p "$ROOT/var/ratpkg"
+	cat .RATINFO > $ROOT/var/ratpkg/$pkgname.info
+	popd
+	echo "完成"
+}
+
+if [ "$(id -u)" -eq 0 ]; then
+    echo "注意当前是 root 用户"
+else
+    echo "请使用 root 权限运行此脚本" >&2
+    exit 1
+fi
+
+
+
+pkg="${1:?错误：必须指定文件}" 
+ROOT="${2:-/}"
+PKG_PATH=$(get_abs_path "$pkg")
+ROOT="${ROOT%/}"
+
+[ -d "$ROOT/tmp" ] || mkdir -p "$ROOT/tmp"
+pushd $ROOT/tmp
+[ -f "$ROOT/tmp/.RATINFO" ] && rm -rf .RATINFO
+[ -f "$ROOT/.RATINFO" ] && rm -rf $ROOT/.RATINFO
+cpio -id ".RATINFO" < $PKG_PATH &> /dev/null
+pkgname=$(head -n 1 ".RATINFO")
+flist=$(tail -n +3 ".RATINFO")
+
+echo "包名:$pkgname"
+
+while IFS= read -r file; do
+    if [ -e "$ROOT/$file" ]; then
+		fe="eee"
+	fi
+done <<< "$flist"
+
+if [ "$fe" = "eee" ]; then
+	[ "$3" = "-f" ] && installpkg $ROOT $PKG_PATH $pkgname || echo "错误: 文件冲突[root=$ROOT] 使用-f强制安装";exit 1 >&2
+fi
+
+
+installpkg $ROOT $PKG_PATH $pkgname 
+
+
+
+
+
+
+
+
+
+
