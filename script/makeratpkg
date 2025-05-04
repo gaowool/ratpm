@@ -13,5 +13,5 @@ pkgver="${2:?需要版本}"
 
 echo $pkgname > .RATINFO
 echo $pkgver >> .RATINFO
-find . -type f -printf "%P\n" >> .RATINFO
+find . -type f -printf "%P\n" ! -name ".RATINFO" >> .RATINFO
 find . ! -name "$pkgname-$pkgver.ratpkg" | cpio -o -H newc > $pkgname-$pkgver.ratpkg
