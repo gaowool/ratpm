@@ -3,7 +3,7 @@
 ### 打包
 makeratpkg pkgname ver
 ### 安装
-ratinstall
+ratinstall xxxxx.ratpkg [ROOT]
 
 ### 列包信息
 
